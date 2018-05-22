@@ -1,14 +1,14 @@
 Description: >
 
-    This template deploys a VPC, with a pair of public and private subnets spread 
-    across two Availabilty Zones. It deploys an Internet Gateway, with a default 
-    route on the public subnets. It deploys a pair of NAT Gateways (one in each AZ), 
+    This template deploys a VPC, with a pair of public and private subnets spread
+    across two Availabilty Zones. It deploys an Internet Gateway, with a default
+    route on the public subnets. It deploys a pair of NAT Gateways (one in each AZ),
     and default routes for them in the private subnets.
 
-    It then deploys a highly available ECS cluster using an AutoScaling Group, with 
-    ECS hosts distributed across multiple Availability Zones. 
+    It then deploys a highly available ECS cluster using an AutoScaling Group, with
+    ECS hosts distributed across multiple Availability Zones.
 
-    Finally, it deploys a pair of example ECS services from containers published in 
+    Finally, it deploys a pair of example ECS services from containers published in
     Amazon EC2 Container Registry (Amazon ECR).
 
     Last Modified: 22nd September 2016
@@ -19,7 +19,7 @@ Resources:
     VPC:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://s3.amazonaws.com/ecs-refarch-cloudformation/infrastructure/vpc.yaml
+            TemplateURL: infrastructure/vpc.yaml
             Parameters:
                 EnvironmentName:    !Ref AWS::StackName
                 VpcCIDR:            10.180.0.0/16
@@ -31,15 +31,15 @@ Resources:
     SecurityGroups:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://s3.amazonaws.com/ecs-refarch-cloudformation/infrastructure/security-groups.yaml
-            Parameters: 
+            TemplateURL: infrastructure/security-groups.yaml
+            Parameters:
                 EnvironmentName: !Ref AWS::StackName
                 VPC: !GetAtt VPC.Outputs.VPC
 
     ALB:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://s3.amazonaws.com/ecs-refarch-cloudformation/infrastructure/load-balancers.yaml
+            TemplateURL: infrastructure/load-balancers.yaml
             Parameters:
                 EnvironmentName: !Ref AWS::StackName
                 VPC: !GetAtt VPC.Outputs.VPC
@@ -49,7 +49,7 @@ Resources:
     ECS:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://s3.amazonaws.com/ecs-refarch-cloudformation/infrastructure/ecs-cluster.yaml
+            TemplateURL: infrastructure/ecs-cluster.yaml
             Parameters:
                 EnvironmentName: !Ref AWS::StackName
                 InstanceType: t2.large
@@ -61,41 +61,41 @@ Resources:
     ProductService:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://s3.amazonaws.com/ecs-refarch-cloudformation/services/product-service/service.yaml
+            TemplateURL: services/product-service/service.yaml
             Parameters:
                 VPC: !GetAtt VPC.Outputs.VPC
                 Cluster: !GetAtt ECS.Outputs.Cluster
                 DesiredCount: 2
-                Listener: !GetAtt ALB.Outputs.Listener 
+                Listener: !GetAtt ALB.Outputs.Listener
                 Path: /products
 
     WebsiteService:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://s3.amazonaws.com/ecs-refarch-cloudformation/services/website-service/service.yaml
+            TemplateURL: services/website-service/service.yaml
             Parameters:
                 VPC: !GetAtt VPC.Outputs.VPC
                 Cluster: !GetAtt ECS.Outputs.Cluster
                 DesiredCount: 2
                 ProductServiceUrl: !Join [ "/", [ !GetAtt ALB.Outputs.LoadBalancerUrl, "products" ]]
-                Listener: !GetAtt ALB.Outputs.Listener 
+                Listener: !GetAtt ALB.Outputs.Listener
                 Path: /
                 ECSServiceAutoScalingRoleARN: !GetAtt ECS.Outputs.ECSServiceAutoScalingRole
 
     LifecycleHook:
         Type: AWS::CloudFormation::Stack
         Properties:
-            TemplateURL: https://s3.amazonaws.com/ecs-refarch-cloudformation/infrastructure/lifecyclehook.yaml
+            TemplateURL: infrastructure/lifecyclehook.yaml
             Parameters:
                 Cluster: !GetAtt ECS.Outputs.Cluster
                 ECSAutoScalingGroupName: !GetAtt ECS.Outputs.ECSAutoScalingGroupName
 
 Outputs:
 
-    ProductServiceUrl: 
+    ProductServiceUrl:
         Description: The URL endpoint for the product service
         Value: !Join [ "/", [ !GetAtt ALB.Outputs.LoadBalancerUrl, "products" ]]
 
-    WebsiteServiceUrl: 
+    WebsiteServiceUrl:
         Description: The URL endpoint for the website service
         Value: !Join ["", [ !GetAtt ALB.Outputs.LoadBalancerUrl, "/" ]]
