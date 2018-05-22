@@ -69,6 +69,17 @@ Resources:
                 Listener: !GetAtt ALB.Outputs.Listener
                 Path: /products
 
+    NginxService:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: services/nginx-service/service.yaml
+            Parameters:
+                VPC: !GetAtt VPC.Outputs.VPC
+                Cluster: !GetAtt ECS.Outputs.Cluster
+                DesiredCount: 2
+                Listener: !GetAtt ALB.Outputs.Listener
+                Path: /nginx
+
     WebsiteService:
         Type: AWS::CloudFormation::Stack
         Properties:
