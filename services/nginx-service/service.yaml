@@ -53,7 +53,8 @@ Resources:
             ContainerDefinitions:
                 - Name: nginx
                   Essential: true
-                  Image: nginx:1.14-alpine
+                  # Image: nginx:1.14-alpine
+                  Image: nginx:latest
                   Memory: 128
                   PortMappings:
                     - ContainerPort: 80
@@ -82,6 +83,9 @@ Resources:
             HealthCheckProtocol: HTTP
             HealthCheckTimeoutSeconds: 5
             HealthyThresholdCount: 2
+            TargetGroupAttributes:
+              - Key:   deregistration_delay.timeout_seconds
+                Value: 15
 
     ListenerRule:
         Type: AWS::ElasticLoadBalancingV2::ListenerRule
